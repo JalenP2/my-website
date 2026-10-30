@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>汉本养 · 门店健康咨询助手</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #183b32;
+      --ink-soft: #405b52;
+      --muted: #687a72;
+      --green: #176c53;
+      --green-dark: #105541;
+      --green-pale: #e9f2ec;
+      --line: #dce5de;
+      --paper: #ffffff;
+      --canvas: #f7f8f4;
+      --warm: #faf4e9;
+      --orange: #b96634;
+      --danger: #9d3c36;
+      --shadow: 0 16px 44px rgba(24, 59, 50, .08), 0 2px 8px rgba(24, 59, 50, .04);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 17px;
+      line-height: 1.6;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--canvas); }
+    button, textarea, input { font: inherit; }
+    button { cursor: pointer; }
+    .page { overflow: hidden; min-height: 100vh; position: relative; }
+    .page::before, .page::after { content: ""; position: absolute; z-index: 0; pointer-events: none; border-radius: 50%; }
+    .page::before { width: 520px; height: 520px; left: -310px; top: 220px; background: radial-gradient(circle, rgba(219, 234, 220, .52), rgba(219, 234, 220, 0) 70%); }
+    .page::after { width: 540px; height: 540px; right: -330px; top: 80px; background: radial-gradient(circle, rgba(244, 227, 200, .38), rgba(244, 227, 200, 0) 70%); }
+    .shell { position: relative; z-index: 1; width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+    .topbar { height: 88px; display: flex; justify-content: space-between; align-items: center; }
+    .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+    .brand-logo { width: 185px; height: 58px; display: block; object-fit: contain; object-position: center; border-radius: 12px; }
+    .top-meta { display: flex; align-items: center; gap: 18px; color: var(--muted); font-size: 14px; }
+    .top-pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.62); }
+    .top-dot { width: 7px; height: 7px; border-radius: 50%; background: #73a27d; }
+    main { padding: 55px 0 64px; }
+    .hero { max-width: 900px; margin: 0 auto; text-align: center; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; background: #edf3ec; color: var(--green-dark); border-radius: 999px; font-size: 14px; font-weight: 600; }
+    .eyebrow-mark { width: 7px; height: 7px; border-radius: 50%; background: #c77a43; }
+    h1 { margin: 19px 0 10px; font-size: clamp(32px, 4vw, 44px); line-height: 1.24; letter-spacing: .015em; font-weight: 700; }
+    .hero-copy { margin: 0 auto; color: var(--muted); font-size: 18px; max-width: 650px; }
+    .search-card { margin: 34px auto 0; text-align: left; background: var(--paper); border: 1px solid rgba(210, 224, 214, .92); border-radius: 22px; box-shadow: var(--shadow); padding: 20px; }
+    .input-label { display: block; margin: 0 0 8px 3px; font-size: 15px; font-weight: 600; color: var(--ink-soft); }
+    .query { display: block; width: 100%; min-height: 112px; border: 0; outline: 0; resize: vertical; padding: 9px 8px 14px; color: var(--ink); background: transparent; font-size: 20px; line-height: 1.6; }
+    .query::placeholder { color: #99a79e; }
+    .search-divider { height: 1px; background: #edf0ec; margin: 0 0 14px; }
+    .search-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .tool-button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; color: var(--ink-soft); font-size: 16px; font-weight: 600; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+    .tool-button:hover { border-color: #a9c6b3; background: #f8fbf8; }
+    .tool-button:active, .primary-button:active, .suggestion:active { transform: translateY(1px); }
+    .tool-button svg { width: 20px; height: 20px; flex: 0 0 auto; }
+    .file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .primary-button { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 10px 22px; border: 0; border-radius: 14px; background: var(--green); color: #fff; font-size: 17px; font-weight: 700; box-shadow: 0 7px 16px rgba(23, 108, 83, .18); transition: background .15s ease, transform .15s ease; }
+    .primary-button:hover { background: var(--green-dark); }
+    .primary-button svg { width: 19px; height: 19px; }
+    :focus-visible { outline: 3px solid #d1905e; outline-offset: 3px; }
+    .small-note { margin: 13px 4px 0; color: var(--muted); font-size: 14px; }
+    .small-note strong { color: var(--ink-soft); }
+    .upload-preview { display: none; align-items: center; gap: 12px; padding: 10px 12px; margin-top: 12px; border-radius: 12px; background: #f6f8f5; color: var(--ink-soft); font-size: 14px; }
+    .upload-preview.visible { display: flex; }
+    .upload-preview img { width: 52px; height: 52px; object-fit: cover; border-radius: 8px; }
+    .upload-preview .file-desc { flex: 1; overflow-wrap: anywhere; }
+    .remove-file { min-width: 40px; min-height: 40px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-weight: 700; }
+    .voice-status { min-height: 24px; margin: 8px 4px 0; font-size: 14px; color: var(--green-dark); }
+    .voice-status.error { color: var(--danger); }
+    .popular { margin: 27px auto 0; text-align: left; }
+    .popular-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 3px 13px; }
+    .popular-title { font-size: 16px; font-weight: 700; }
+    .popular-hint { color: var(--muted); font-size: 14px; }
+    .suggestions { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .body-card { min-width: 0; padding: 8px 7px 10px; border: 1px solid #e7ded0; border-radius: 18px; background: #fffaf0; color: var(--ink-soft); font-size: 15px; font-weight: 700; transition: .15s ease; }
+    .body-card img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: contain; }
+    .body-card span { display: block; padding-top: 3px; }
+    .body-card:hover, .body-card:focus-visible { border-color: #d07052; background: #fff5e8; transform: translateY(-2px); }
+    .body-options { margin-top: 14px; padding: 14px; border: 1px solid #eadfd3; border-radius: 16px; background: #fffaf2; }
+    .body-options[hidden] { display: none; }
+    .body-options-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ink); }
+    .body-options-head button { min-height: 38px; padding: 6px 10px; border: 0; border-radius: 9px; background: #f1e8dc; color: var(--ink-soft); font-size: 14px; }
+    .symptom-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .symptom-option { min-height: 42px; padding: 7px 13px; border: 1px solid #e4d4c3; border-radius: 999px; background: #fff; color: var(--ink-soft); font-size: 15px; }
+    .symptom-option:hover { border-color: #c56b4f; color: var(--green-dark); }
+    .section-rule { display: flex; align-items: center; gap: 15px; color: #7a8981; font-size: 13px; margin: 27px 0 0; }
+    .section-rule::before, .section-rule::after { content: ""; flex: 1; height: 1px; background: #e2e8e1; }
+    .results { display: none; max-width: 900px; margin: 42px auto 0; text-align: left; scroll-margin-top: 20px; }
+    .results.visible { display: block; animation: rise .35s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .result-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 17px; }
+    .result-kicker { margin: 0 0 3px; color: var(--green); font-size: 14px; font-weight: 700; }
+    .result-title { margin: 0; font-size: 26px; line-height: 1.35; }
+    .result-query { margin: 5px 0 0; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+    .copy-button { min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.8); color: var(--ink-soft); font-size: 15px; font-weight: 600; flex: 0 0 auto; }
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .result-panel { padding: 20px 21px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.92); }
+    .result-panel h3 { margin: 0 0 12px; font-size: 18px; }
+    .result-panel p { margin: 0; color: var(--ink-soft); }
+    .result-panel ul { margin: 0; padding-left: 22px; color: var(--ink-soft); }
+    .result-panel li + li { margin-top: 7px; }
+    .product-panel { grid-column: 1 / -1; }
+    .product-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .product { min-height: 118px; display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 15px; background: #f7f8f4; }
+    .product-icon { width: 56px; height: 56px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 16px; background: #e7efe7; color: var(--green); }
+    .product-icon svg { width: 27px; height: 27px; }
+    .product-info { min-width: 0; flex: 1; }
+    .product-name { margin: 0; font-weight: 700; font-size: 16px; }
+    .product-note { margin: 3px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .add-product { min-height: 42px; padding: 7px 12px; border: 1px solid #bdd1c1; border-radius: 11px; background: #fff; color: var(--green-dark); font-size: 14px; font-weight: 700; flex: 0 0 auto; }
+    .add-product.added { color: #fff; background: var(--green); border-color: var(--green); }
+    .store-list { display: none; margin-top: 15px; padding: 15px 18px; border-radius: 14px; background: var(--green-pale); color: var(--ink-soft); }
+    .store-list.visible { display: block; }
+    .store-list strong { color: var(--green-dark); }
+    .store-list ul { margin: 5px 0 0; padding-left: 22px; }
+    .alert-box { display: none; align-items: flex-start; gap: 12px; padding: 16px 18px; margin-bottom: 15px; border: 1px solid #e7c5b6; border-radius: 16px; background: #fff6f0; color: #713d30; }
+    .alert-box.visible { display: flex; }
+    .alert-symbol { width: 28px; height: 28px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: #f3dfd4; color: var(--danger); font-weight: 800; }
+    .alert-box p { margin: 0; }
+    .result-disclaimer { margin: 15px 2px 0; color: var(--muted); font-size: 14px; }
+    .bottom-note { max-width: 900px; margin: 55px auto 0; padding: 17px 20px; border-radius: 15px; background: rgba(233, 242, 236, .65); color: #536b5f; font-size: 14px; text-align: center; }
+    .bottom-note strong { color: #345b48; }
+    footer { padding: 23px 0 34px; color: #87958d; text-align: center; font-size: 13px; }
+    .toast { position: fixed; z-index: 5; left: 50%; bottom: 24px; transform: translate(-50%, 15px); opacity: 0; pointer-events: none; padding: 12px 18px; border-radius: 12px; color: #fff; background: #234d40; box-shadow: 0 8px 22px rgba(20, 46, 37, .18); transition: .2s ease; font-size: 15px; }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 700px) {
+      .shell { width: min(100% - 32px, 560px); }
+      .topbar { height: 72px; }
+      .brand-logo { width: 156px; height: 50px; }
+      .top-meta { gap: 0; }
+      .top-meta .meta-copy { display: none; }
+      .top-pill { font-size: 13px; padding: 7px 10px; }
+      main { padding: 40px 0 42px; }
+      h1 { font-size: 32px; }
+      .hero-copy { font-size: 16px; }
+      .search-card { padding: 14px; margin-top: 27px; border-radius: 18px; }
+      .query { min-height: 126px; font-size: 18px; }
+      .search-actions { align-items: stretch; }
+      .tools { width: 100%; }
+      .tool-button { flex: 1; font-size: 15px; padding: 8px 10px; }
+      .primary-button { width: 100%; min-height: 54px; margin-top: 1px; }
+      .popular-head { display: block; }
+      .popular-hint { display: block; margin-top: 3px; }
+      .suggestions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .body-card { font-size: 14px; padding: 5px 4px 8px; }
+      .result-top { display: block; }
+      .result-title { font-size: 23px; }
+      .copy-button { margin-top: 12px; }
+      .result-grid { grid-template-columns: 1fr; }
+      .product-panel { grid-column: auto; }
+      .product-list { grid-template-columns: 1fr; }
+      .product { gap: 10px; padding: 11px; }
+      .product-icon { width: 48px; height: 48px; }
+      .add-product { padding: 7px 10px; }
+      .bottom-note { margin-top: 35px; text-align: left; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="汉本养首页">
+          <img class="brand-logo" src="public/hanbenyang-logo.png" alt="汉本养 HAN BEN YANG">
+        </a>
+        <div class="top-meta"><span class="meta-copy">简单问一问，让服务更贴心</span><span class="top-pill"><i class="top-dot" aria-hidden="true"></i>门店体验版</span></div>
+      </header>
+
+      <main id="top">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>给门店店主的健康咨询小帮手</div>
+          <h1 id="hero-title">把顾客的描述，变成贴心建议</h1>
+          <p class="hero-copy">说一说，拍一拍，轻松问一问。</p>
+
+          <form class="search-card" id="consult-form">
+            <label class="input-label" for="query">顾客最近有什么不舒服或想改善的地方？</label>
+            <textarea class="query" id="query" name="query" maxlength="800" placeholder="例如：最近晚上总醒，白天有点没精神……" aria-describedby="privacy-note" required></textarea>
+            <div class="search-divider"></div>
+            <div class="search-actions">
+              <div class="tools">
+                <button class="tool-button" type="button" id="upload-button" aria-label="选择一张图片上传预览">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+                  上传图片
+                </button>
+                <input class="file-input" type="file" id="image-upload" accept="image/*" aria-label="选择图片">
+                <button class="tool-button" type="button" id="voice-button" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v5m-4 0h8"></path></svg>
+                  <span id="voice-label">语音输入</span>
+                </button>
+              </div>
+              <button class="primary-button" type="submit">
+                获取参考建议
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"></path></svg>
+              </button>
+            </div>
+            <div class="upload-preview" id="upload-preview" aria-live="polite">
+              <img id="preview-image" alt="顾客上传图片预览">
+              <span class="file-desc" id="file-desc"></span>
+              <button class="remove-file" type="button" id="remove-file" aria-label="移除图片">移除</button>
+            </div>
+            <p class="voice-status" id="voice-status" aria-live="polite"></p>
+            <p class="small-note" id="privacy-note"><strong>先征得顾客同意。</strong>文字和图片只在本页演示、不提交到服务端；语音识别由浏览器提供，音频处理方式以浏览器说明为准。图片目前仅供预览。</p>
+          </form>
+
+          <section class="popular" aria-labelledby="popular-title">
+            <div class="popular-head"><span class="popular-title" id="popular-title">哪里不舒服？</span><span class="popular-hint">点图片，选情况</span></div>
+            <div class="suggestions">
+              <button class="body-card" type="button" data-body="head"><img src="public/body-head.svg" alt="可爱的头部插画"><span>头部</span></button>
+              <button class="body-card" type="button" data-body="neck"><img src="public/body-neck.svg" alt="肩颈部位插画"><span>肩颈</span></button>
+              <button class="body-card" type="button" data-body="hands"><img src="public/body-hands.svg" alt="手部插画"><span>手部</span></button>
+              <button class="body-card" type="button" data-body="legs"><img src="public/body-legs.svg" alt="腿与膝盖插画"><span>腿脚</span></button>
+              <button class="body-card" type="button" data-body="sleep"><img src="public/body-sleep.svg" alt="安心睡觉插画"><span>睡眠</span></button>
+              <button class="body-card" type="button" data-body="stomach"><img src="public/body-stomach.svg" alt="圆润的胃部插画"><span>肠胃</span></button>
+            </div>
+            <div class="body-options" id="body-options" hidden><div class="body-options-head"><strong id="body-options-title"></strong><button type="button" id="close-body" aria-label="收起情况选择">收起 ×</button></div><div class="symptom-options" id="symptom-options"></div></div>
+            <div class="section-rule">免费体验 · 仅供日常健康沟通参考</div>
+          </section>
+        </section>
+
+        <section class="results" id="results" aria-labelledby="result-heading" aria-live="polite">
+          <div class="alert-box" id="urgent-alert" role="alert">
+            <span class="alert-symbol" aria-hidden="true">!</span>
+            <p><strong>先关注安全：</strong>描述里可能提到需要优先处理的情况。请不要用门店商品代替就医；若症状正在发生或较严重，请尽快联系急救或前往正规医疗机构。</p>
+          </div>
+          <div class="result-top">
+            <div><p class="result-kicker">汉本养 · 门店服务参考</p><h2 class="result-title" id="result-heading">日常照护建议</h2><p class="result-query" id="result-query"></p></div>
+            <button class="copy-button" id="copy-button" type="button">复制服务小结</button>
+          </div>
+          <div class="result-grid">
+            <section class="result-panel"><h3>先关心这几件事</h3><ul id="questions-list"></ul></section>
+            <section class="result-panel"><h3>日常可以这样做</h3><ul id="tips-list"></ul></section>
+            <section class="result-panel product-panel">
+              <h3>可参考的门店商品 <span style="font-size:14px;font-weight:400;color:#687a72">· 演示占位，需替换为门店真实商品</span></h3>
+              <div class="product-list" id="product-list"></div>
+              <div class="store-list" id="store-list" aria-live="polite"><strong>本次推荐清单</strong><ul id="store-items"></ul></div>
+            </section>
+          </div>
+          <p class="result-disclaimer">这些内容用于日常沟通参考，不作疾病判断或治疗承诺。持续、加重或让顾客担心的症状，请建议其咨询医生。推荐商品前，请核对标签、适用人群、禁忌和门店资质。</p>
+        </section>
+
+        <div class="bottom-note"><strong>给店主的小提醒：</strong>先听顾客怎么说，再问清持续时间、变化和既往情况；尊重顾客意愿，不夸大商品作用。</div>
+      </main>
+      <footer>汉本养 · 让健康服务更简单</footer>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const queryInput = document.getElementById('query');
+      const form = document.getElementById('consult-form');
+      const results = document.getElementById('results');
+      const urgentAlert = document.getElementById('urgent-alert');
+      const voiceButton = document.getElementById('voice-button');
+      const voiceLabel = document.getElementById('voice-label');
+      const voiceStatus = document.getElementById('voice-status');
+      const imageUpload = document.getElementById('image-upload');
+      const uploadButton = document.getElementById('upload-button');
+      const uploadPreview = document.getElementById('upload-preview');
+      const previewImage = document.getElementById('preview-image');
+      const fileDesc = document.getElementById('file-desc');
+      const toast = document.getElementById('toast');
+      const bodyOptions = document.getElementById('body-options');
+      const bodyOptionsTitle = document.getElementById('body-options-title');
+      const symptomOptions = document.getElementById('symptom-options');
+      const closeBody = document.getElementById('close-body');
+      let currentImageUrl = '';
+      let recognition = null;
+      let isRecording = false;
+      let toastTimer;
+      const selectedProducts = new Map();
+      const bodyChoices = {
+        head: {title:'头部常见情况', options:[['头晕', '最近有点头晕，想了解日常注意事项'], ['头痛', '最近头部不舒服，偶尔会头痛'], ['眼睛累', '最近眼睛容易疲劳，想了解日常建议']]},
+        neck: {title:'肩颈常见情况', options:[['肩颈僵硬', '肩颈总觉得僵硬，坐久了更明显'], ['脖子酸', '脖子容易酸，想了解日常活动方法'], ['肩膀紧', '肩膀有点紧，想了解日常放松建议']]},
+        hands: {title:'手部常见情况', options:[['手脚发凉', '手脚容易发凉，想了解日常保暖方法'], ['手部麻木', '手部偶尔有麻木感，想先了解需要关注什么'], ['手腕酸', '手腕活动后有点酸，想了解日常注意事项']]},
+        legs: {title:'腿脚常见情况', options:[['膝盖不舒服', '膝盖活动时有些不舒服，走路久了更明显'], ['腿脚乏力', '最近腿脚容易累，想了解日常照护建议'], ['走路不稳', '走路时感觉不太稳，想先了解需要注意什么']]},
+        sleep: {title:'睡眠常见情况', options:[['睡不好', '最近晚上睡不好，半夜容易醒'], ['入睡慢', '晚上入睡比较慢，白天有点没精神'], ['早醒', '最近早上醒得早，想了解日常作息建议']]},
+        stomach: {title:'肠胃常见情况', options:[['胃口不佳', '最近胃口不太好，想了解日常调理建议'], ['肚子胀', '吃完饭容易觉得肚子胀，想了解日常建议'], ['消化慢', '最近感觉消化不太舒服，想了解饮食注意事项']]}
+      };
+
+      const library = [
+        {
+          key: 'sleep', words: ['睡不好', '失眠', '睡不着', '夜醒', '半夜醒', '入睡'], title: '关于睡眠，可以先了解作息和环境',
+          questions: ['这种情况大约持续多久了？最近作息或生活环境有变化吗？', '白天精神、情绪或日常活动有没有受到影响？'],
+          tips: ['尽量保持规律的作息时间，睡前减少浓茶、咖啡和长时间看屏幕。', '如果问题持续影响生活，建议顾客咨询医疗专业人员，了解合适的处理方式。'],
+          products: [{name:'柔软遮光眼罩', note:'日常睡眠环境用品；建议先试戴确认舒适。', icon:'eye'}, {name:'轻薄保暖毯', note:'日常保暖用品；按季节和个人感受选择。', icon:'blanket'}]
+        },
+        {
+          key: 'shoulder', words: ['肩颈', '脖子', '颈椎', '肩膀', '僵硬'], title: '关于肩颈不适，先了解发生场景',
+          questions: ['是突然出现还是慢慢开始的？最近有没有受伤或长时间保持一个姿势？', '是否伴有手臂麻木、无力或明显活动受限？'],
+          tips: ['久坐时可适当起身活动，调整坐姿和屏幕高度，动作以舒适为准。', '如果疼痛明显、持续加重，或伴有麻木无力，请建议顾客就医评估。'],
+          products: [{name:'人体工学靠垫', note:'用于调整坐姿的日常用品；选适合身高和座椅的款式。', icon:'armchair'}, {name:'轻便披肩', note:'日常保暖用品；按个人体感选择。', icon:'shirt'}]
+        },
+        {
+          key: 'knee', words: ['膝盖', '膝关节', '膝疼', '膝痛', '走路疼', '关节'], title: '关于膝部不适，先关心活动和变化',
+          questions: ['有没有摔倒、扭伤或近期运动量变化？走路和上下楼哪种情况更明显？', '是否出现明显肿胀、发热、不能负重或活动受限？'],
+          tips: ['先减少会明显加重不适的活动，避免勉强运动。', '若有受伤、明显肿胀、不能负重，或症状持续，请尽快咨询医生。'],
+          products: [{name:'日常护膝', note:'属于穿戴用品；应先试戴确认尺码、松紧和舒适度。', icon:'shield'}, {name:'防滑手杖', note:'如顾客有步行不稳，先评估是否合适并指导安全使用。', icon:'walk'}]
+        },
+        {
+          key: 'tired', words: ['疲劳', '容易累', '没精神', '乏力', '犯困'], title: '关于容易疲劳，先了解近期状态',
+          questions: ['最近睡眠、饮食和工作强度有变化吗？大约持续了多久？', '是否伴有胸闷、气短、心慌或明显体重变化？'],
+          tips: ['规律饮水和休息，尽量保持饮食与作息稳定。', '如果疲劳持续、加重，或伴有其他明显不适，建议顾客咨询医生。'],
+          products: [{name:'随行保温杯', note:'日常饮水用品；按容量、重量和清洗便利度选择。', icon:'cup'}, {name:'轻便午休靠枕', note:'日常休息用品；可根据使用场景选择。', icon:'pillow'}]
+        },
+        {
+          key: 'appetite', words: ['胃口', '食欲', '吃不下', '消化', '肚子'], title: '关于胃口变化，先了解饮食和身体感受',
+          questions: ['胃口变化多久了？最近饮食、用药或生活习惯有变化吗？', '有没有持续腹痛、呕吐、吞咽困难或体重明显下降？'],
+          tips: ['可以少量多餐，选择顾客平时能接受、容易入口的食物。', '若变化持续或伴随明显不适，建议顾客咨询医疗专业人员。'],
+          products: [{name:'分格餐盒', note:'日常饮食收纳用品；可按用餐习惯选择。', icon:'bowl'}, {name:'易握餐具', note:'日常辅助用品；适合有需要的顾客试用。', icon:'spoon'}]
+        },
+        {
+          key: 'cold', words: ['手脚发凉', '手脚冰凉', '手冷', '脚冷', '发凉'], title: '关于手脚发凉，先了解环境和持续时间',
+          questions: ['这种感受在什么环境下明显？保暖后会不会缓解？', '是否伴有麻木、颜色变化、疼痛或单侧突然发凉？'],
+          tips: ['根据天气做好分层保暖，避免长时间处于寒冷环境。', '若伴有疼痛、麻木、颜色变化，或突然出现明显差异，请建议顾客就医。'],
+          products: [{name:'保暖袜', note:'日常穿着用品；注意尺码合适、不勒脚。', icon:'sock'}, {name:'暖手套', note:'日常保暖用品；选择舒适、方便活动的款式。', icon:'glove'}]
+        }
+      ];
+      const defaultAdvice = {
+        title: '先听清需求，再一起找合适的日常办法',
+        questions: ['这种情况从什么时候开始？最近有变化或诱因吗？', '它对睡眠、饮食、活动或日常生活有什么影响？'],
+        tips: ['先记录发生时间、频率和变化，帮助顾客更清楚地表达情况。', '避免自行停药或用商品替代诊疗；持续或担心的症状建议咨询医生。'],
+        products: [{name:'舒适靠垫', note:'常见日常生活用品；请根据顾客实际需求和使用环境选择。', icon:'pillow'}, {name:'随行保温杯', note:'日常饮水用品；按容量、重量和清洗便利度选择。', icon:'cup'}]
+      };
+      const dangerWords = ['胸痛', '胸口痛', '喘不上气', '呼吸困难', '呼吸急促', '突然说不清', '口角歪', '半边身体无力', '单侧无力', '意识不清', '昏厥', '大量出血', '剧烈头痛'];
+      const icons = {
+        eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path><circle cx="12" cy="12" r="2.5"></circle></svg>',
+        blanket:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16v13H4zM4 11h16M8 7V4m8 3V4M8 15h.01M12 15h.01M16 15h.01"></path></svg>',
+        armchair:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5M4 12h16v6H4zM6 18v3m12-3v3"></path></svg>',
+        shirt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 4-5 3 3 4 2-1v10h8V10l2 1 3-4-5-3c-.8 1.4-2 2-4 2s-3.2-.6-4-2Z"></path></svg>',
+        shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="M8 12h8"></path></svg>',
+        walk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13" cy="4" r="2"></circle><path d="m10 22 2-7-3-3 3-5 3 4 4 2m-8-6 4 2m-6 6-3 4m8-4 4 4"></path></svg>',
+        cup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 14H7L6 7Zm2-3h8v3H8zM18 10h2a2 2 0 0 1 0 4h-2"></path></svg>',
+        pillow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5c3 2 11 2 14 0l2 2c-2 3-2 7 0 10l-2 2c-3-2-11-2-14 0l-2-2c2-3 2-7 0-10l2-2Z"></path></svg>',
+        bowl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h18a8 8 0 0 1-8 8h-2a8 8 0 0 1-8-8Zm2-4c1 0 1 1 2 1s1-1 2-1m3 0c1 0 1 1 2 1s1-1 2-1"></path></svg>',
+        spoon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm0 10v8m9-18v18m0-18c2 2 3 5 3 8h-3"></path></svg>',
+        sock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h7v9l4 4-2 4H7l-2-2 2-4 2-2V3Z"></path><path d="M9 7h7"></path></svg>',
+        glove:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v9c0 4-2 6-6 6h-2c-2 0-3-1-4-3l-3-5a2 2 0 0 1 3-2l2 2"></path></svg>'
+      };
+
+      function getAdvice(text) {
+        const lower = text.toLowerCase();
+        return library.find(item => item.words.some(word => lower.includes(word))) || defaultAdvice;
+      }
+      function makeList(target, items) {
+        target.replaceChildren(...items.map(item => { const li = document.createElement('li'); li.textContent = item; return li; }));
+      }
+      function renderProducts(products) {
+        const list = document.getElementById('product-list');
+        list.replaceChildren();
+        products.forEach((product, index) => {
+          const item = document.createElement('article');
+          item.className = 'product';
+          const productId = `${product.name}-${index}`;
+          item.innerHTML = `<span class="product-icon">${icons[product.icon] || icons.pillow}</span><div class="product-info"><p class="product-name"></p><p class="product-note"></p></div><button class="add-product" type="button"></button>`;
+          item.querySelector('.product-name').textContent = product.name;
+          item.querySelector('.product-note').textContent = product.note;
+          const button = item.querySelector('.add-product');
+          button.dataset.productId = productId;
+          button.dataset.productName = product.name;
+          button.textContent = selectedProducts.has(productId) ? '已加入' : '加入清单';
+          button.classList.toggle('added', selectedProducts.has(productId));
+          list.append(item);
+        });
+      }
+      function updateProductList() {
+        const box = document.getElementById('store-list');
+        const ul = document.getElementById('store-items');
+        box.classList.toggle('visible', selectedProducts.size > 0);
+        ul.replaceChildren(...[...selectedProducts.values()].map(name => { const li = document.createElement('li'); li.textContent = name; return li; }));
+      }
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
+      }
+      function analyze(text) {
+        const advice = getAdvice(text);
+        document.getElementById('result-heading').textContent = advice.title;
+        document.getElementById('result-query').textContent = `顾客描述：${text}`;
+        makeList(document.getElementById('questions-list'), advice.questions);
+        makeList(document.getElementById('tips-list'), advice.tips);
+        urgentAlert.classList.toggle('visible', dangerWords.some(word => text.includes(word)));
+        selectedProducts.clear();
+        updateProductList();
+        renderProducts(advice.products);
+        results.classList.add('visible');
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const text = queryInput.value.trim();
+        if (!text) { queryInput.focus(); showToast('请先写下或说出顾客的情况'); return; }
+        analyze(text);
+      });
+
+      document.querySelectorAll('[data-body]').forEach(button => {
+        button.addEventListener('click', () => {
+          const choice = bodyChoices[button.dataset.body];
+          bodyOptionsTitle.textContent = choice.title;
+          symptomOptions.replaceChildren(...choice.options.map(([label, prompt]) => {
+            const option = document.createElement('button');
+            option.type = 'button'; option.className = 'symptom-option'; option.textContent = label;
+            option.addEventListener('click', () => { queryInput.value = prompt; analyze(prompt); });
+            return option;
+          }));
+          bodyOptions.hidden = false;
+          bodyOptions.scrollIntoView({behavior:'smooth', block:'nearest'});
+        });
+      });
+      closeBody.addEventListener('click', () => { bodyOptions.hidden = true; });
+
+      imageUpload.addEventListener('change', () => {
+        const file = imageUpload.files && imageUpload.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { showToast('请选择图片文件'); imageUpload.value = ''; return; }
+        if (currentImageUrl) URL.revokeObjectURL(currentImageUrl);
+        currentImageUrl = URL.createObjectURL(file);
+        previewImage.src = currentImageUrl;
+        fileDesc.textContent = `${file.name} · 图片仅在此页面预览，当前版本不识别图片内容`;
+        uploadPreview.classList.add('visible');
+      });
+      uploadButton.addEventListener('click', () => imageUpload.click());
+      document.getElementById('remove-file').addEventListener('click', () => {
+        imageUpload.value = '';
+        uploadPreview.classList.remove('visible');
+        previewImage.removeAttribute('src');
+        if (currentImageUrl) URL.revokeObjectURL(currentImageUrl);
+        currentImageUrl = '';
+      });
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'zh-CN';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        recognition.onresult = event => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+          queryInput.value = transcript;
+          voiceStatus.textContent = transcript ? `已识别：${transcript}` : '正在听，请说慢一点。';
+        };
+        recognition.onerror = event => {
+          voiceStatus.textContent = event.error === 'not-allowed' ? '浏览器未获得麦克风权限，请在地址栏允许使用麦克风。' : '语音识别暂不可用，也可以使用手机键盘的语音输入。';
+          voiceStatus.classList.add('error');
+        };
+        recognition.onend = () => {
+          isRecording = false;
+          voiceButton.setAttribute('aria-pressed', 'false');
+          voiceLabel.textContent = '语音输入';
+          if (queryInput.value.trim()) voiceStatus.textContent = '语音已填入描述框，检查后点击“获取参考建议”。';
+        };
+      } else {
+        voiceStatus.textContent = '当前浏览器不支持语音识别，可使用手机键盘上的麦克风输入。';
+      }
+      voiceButton.addEventListener('click', () => {
+        if (!recognition) { voiceStatus.classList.add('error'); showToast('请使用手机键盘的语音输入'); return; }
+        voiceStatus.classList.remove('error');
+        if (isRecording) { recognition.stop(); return; }
+        queryInput.value = '';
+        voiceStatus.textContent = '正在听，请说慢一点。语音转文字由浏览器提供，请先取得顾客同意。';
+        try { recognition.start(); isRecording = true; voiceButton.setAttribute('aria-pressed', 'true'); voiceLabel.textContent = '停止录音'; }
+        catch { voiceStatus.textContent = '语音输入暂不可用，请稍后重试或使用手机键盘语音输入。'; voiceStatus.classList.add('error'); }
+      });
+
+      document.getElementById('product-list').addEventListener('click', event => {
+        const button = event.target.closest('.add-product');
+        if (!button) return;
+        const id = button.dataset.productId;
+        if (selectedProducts.has(id)) selectedProducts.delete(id);
+        else selectedProducts.set(id, button.dataset.productName);
+        button.textContent = selectedProducts.has(id) ? '已加入' : '加入清单';
+        button.classList.toggle('added', selectedProducts.has(id));
+        updateProductList();
+      });
+      document.getElementById('copy-button').addEventListener('click', async () => {
+        const summary = `${document.getElementById('result-heading').textContent}\n${document.getElementById('result-query').textContent}\n先关心：${[...document.getElementById('questions-list').querySelectorAll('li')].map(x => x.textContent).join('；')}\n日常参考：${[...document.getElementById('tips-list').querySelectorAll('li')].map(x => x.textContent).join('；')}\n推荐商品：${[...selectedProducts.values()].join('、') || '待店主确认'}\n仅供日常健康沟通参考，不作疾病判断或治疗承诺。`;
+        try { await navigator.clipboard.writeText(summary); showToast('服务小结已复制'); }
+        catch { showToast('复制不可用，请手动选中服务小结'); }
+      });
+    })();
+  </script>
+</body>
+</html>
